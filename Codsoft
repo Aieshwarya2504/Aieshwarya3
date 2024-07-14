@@ -1,0 +1,44 @@
+import numpy as np
+
+# Define movie ratings matrix
+ratings = np.array([
+    [5, 4, 3, 2, 1],  # User 1
+    [3, 3, 4, 5, 5],  # User 2
+    [1, 2, 3, 4, 5],  # User 3
+    [5, 4, 3, 2, 1],  # User 4
+])
+
+# Calculate similarity between users using Cosine Similarity
+def cosine_similarity(user1, user2):
+    dot_product = np.dot(user1, user2)
+    norm_user1 = np.linalg.norm(user1)
+    norm_user2 = np.linalg.norm(user2)
+    return dot_product / (norm_user1 * norm_user2)
+
+users = ratings.shape[0]
+similarity_matrix = np.zeros((users, users))
+
+for i in range(users):
+    for j in range(users):
+        if i != j:
+            similarity_matrix[i, j] = cosine_similarity(ratings[i], ratings[j])
+
+# Find the k most similar users for each user
+k = 2
+similar_users = [np.argsort(similarity_matrix[i])[-k:][::-1] for i in range(users)]
+
+# Calculate weighted average rating for each movie and user
+predicted_ratings = np.zeros((users, ratings.shape[1]))
+
+for i in range(users):
+    for j in range(ratings.shape[1]):
+        similar_user_ratings = [ratings[similar_users[i][k], j] for k in range(k)]
+        weighted_sum = sum(similar_user_ratings) / k
+        predicted_ratings[i, j] = (weighted_sum + ratings[i, j]) / 2
+
+# Recommend movies with the highest predicted ratings for each user
+for i in range(users):
+    top_movie_indices = np.argsort(predicted_ratings[i])[-3:][::-1]
+    print(f"Recommendations for User {i+1}:")
+    for movie_index in top_movie_indices:
+        print(f"Movie {movie_index+1}: {ratings[:, movie_index]}")
